@@ -4,3 +4,4 @@ coverage
 .vitest
 .playwright
 pnpm-lock.yaml
+*.tsbuildinfo
