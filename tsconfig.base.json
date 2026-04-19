@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@topo/core": ["packages/core/src/index.ts"],
+      "@topo/react": ["packages/react/src/index.ts"],
+      "@topo/cli": ["packages/cli/src/index.ts"],
+      "@topo/vite": ["packages/vite-plugin/src/index.ts"]
+    },
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true
+  }
+}
