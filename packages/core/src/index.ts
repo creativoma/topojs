@@ -128,18 +128,35 @@ function getByPath(obj: unknown, path: string): unknown {
 }
 
 function setByPath(obj: Record<string, unknown>, path: string, value: unknown): void {
+  const isUnsafeKey = (key: string): boolean =>
+    key === '__proto__' || key === 'prototype' || key === 'constructor';
   const parts = path.split('.');
+  if (parts.some((part) => isUnsafeKey(part))) {
+    throw new Error(`Unsafe path segment in '${path}'.`);
+  }
   const last = parts.pop();
   if (!last) return;
   let curr: Record<string, unknown> = obj;
   for (const part of parts) {
+    if (isUnsafeKey(part)) throw new Error(`Unsafe path segment in '${path}'.`);
     const next = curr[part];
     if (!next || typeof next !== 'object') {
-      curr[part] = {};
+      Object.defineProperty(curr, part, {
+        value: Object.create(null),
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
     }
     curr = curr[part] as Record<string, unknown>;
   }
-  curr[last] = value;
+  if (isUnsafeKey(last)) throw new Error(`Unsafe path segment in '${path}'.`);
+  Object.defineProperty(curr, last, {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true
+  });
 }
 
 function extractPaths(input: string): string[] {

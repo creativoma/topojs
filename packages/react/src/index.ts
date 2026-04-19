@@ -1,5 +1,24 @@
-import type { RuntimeStatespace, TopologyEventMap } from '@topo/core';
 import { useMemo, useSyncExternalStore } from 'react';
+
+type TopologyEventMap = {
+  'cycle-detected': { cycle: string[] };
+  'slow-propagation': { path: string; ms: number };
+  influenced: { path: string; sources: string[] };
+};
+
+interface RuntimeStatespace {
+  get<T>(path: string): T;
+  set<T>(path: string, value: T): void;
+  update<T>(path: string, updater: (prev: T) => T): void;
+  subscribe(path: string, callback: () => void): () => void;
+  subscribeEvent<K extends keyof TopologyEventMap>(
+    type: K,
+    callback: (payload: TopologyEventMap[K]) => void
+  ): () => void;
+  dependsOn(path: string): string[];
+  affects(path: string): string[];
+  updateOrder(path: string): string[];
+}
 
 export function useNode<T>(space: RuntimeStatespace, path: string): T {
   return useSyncExternalStore(
@@ -10,7 +29,16 @@ export function useNode<T>(space: RuntimeStatespace, path: string): T {
 }
 
 export function useNodes<T extends unknown[]>(space: RuntimeStatespace, paths: string[]): T {
-  return paths.map((path) => useNode(space, path)) as T;
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const unsubs = paths.map((path) => space.subscribe(path, onStoreChange));
+      return () => {
+        unsubs.forEach((unsub) => unsub());
+      };
+    },
+    () => paths.map((path) => space.get(path)) as T,
+    () => paths.map((path) => space.get(path)) as T
+  );
 }
 
 export function useTopology(space: RuntimeStatespace, path: string): {
