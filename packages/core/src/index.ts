@@ -60,17 +60,17 @@ export interface TopologyEventMap {
   influenced: { path: string; sources: string[] };
 }
 
-type Subscriber = () => void;
-type EventSubscriber<T> = (payload: T) => void;
-
-interface RuntimeStatespace {
+export interface RuntimeStatespace {
   name: string;
   definition: StatespaceDefinition;
   get<T>(path: string): T;
   set<T>(path: string, value: T): void;
   update<T>(path: string, updater: (prev: T) => T): void;
-  subscribe(path: string, callback: Subscriber): () => void;
-  subscribeEvent<K extends keyof TopologyEventMap>(type: K, callback: EventSubscriber<TopologyEventMap[K]>): () => void;
+  subscribe(path: string, callback: () => void): () => void;
+  subscribeEvent<K extends keyof TopologyEventMap>(
+    type: K,
+    callback: (payload: TopologyEventMap[K]) => void,
+  ): () => void;
   dependsOn(path: string): string[];
   affects(path: string): string[];
   updateOrder(path: string): string[];
@@ -78,32 +78,36 @@ interface RuntimeStatespace {
 }
 
 const RESERVED = new Set(['true', 'false', 'null', 'undefined']);
+const MAX_PROPAGATION_DEPTH = 100;
 
-function node<T>(definition: NodeDefinition<T>): NodeDefinition<T> {
+export function node<T>(definition: NodeDefinition<T>): NodeDefinition<T> {
   return definition;
 }
 
-function derives<T>(
+export function derives<T>(
   dependencies: string[],
   compute: (...deps: unknown[]) => T | Promise<T>,
-  options?: DerivesEdge<T>['options']
+  options?: DerivesEdge<T>['options'],
 ): DerivesEdge<T> {
   return { kind: 'derives', dependencies, compute, options };
 }
 
-function requires(conditions: string[]): RequiresEdge {
+export function requires(conditions: string[]): RequiresEdge {
   return { kind: 'requires', conditions };
 }
 
-function influenced_by(sources: string[], options?: InfluencedByEdge['options']): InfluencedByEdge {
+export function influencedBy(
+  sources: string[],
+  options?: InfluencedByEdge['options'],
+): InfluencedByEdge {
   return { kind: 'influenced_by', sources, options };
 }
 
-function triggers(target: string, effect: TriggersEdge['effect']): TriggersEdge {
+export function triggers(target: string, effect: TriggersEdge['effect']): TriggersEdge {
   return { kind: 'triggers', target, effect };
 }
 
-function defineConfig<T>(config: T): T {
+export function defineConfig<T>(config: T): T {
   return config;
 }
 
@@ -131,31 +135,31 @@ function setByPath(obj: Record<string, unknown>, path: string, value: unknown): 
   const isUnsafeKey = (key: string): boolean =>
     key === '__proto__' || key === 'prototype' || key === 'constructor';
   const parts = path.split('.');
-  if (parts.some((part) => isUnsafeKey(part))) {
+  if (parts.some(isUnsafeKey)) {
     throw new Error(`Unsafe path segment in '${path}'.`);
   }
   const last = parts.pop();
   if (!last) return;
   let curr: Record<string, unknown> = obj;
   for (const part of parts) {
-    if (isUnsafeKey(part)) throw new Error(`Unsafe path segment in '${path}'.`);
     const next = curr[part];
-    if (!next || typeof next !== 'object') {
-      Object.defineProperty(curr, part, {
-        value: Object.create(null),
-        writable: true,
-        enumerable: true,
-        configurable: true
-      });
-    }
-    curr = curr[part] as Record<string, unknown>;
+    const newNext: Record<string, unknown> =
+      next && typeof next === 'object' && !Array.isArray(next)
+        ? { ...(next as Record<string, unknown>) }
+        : Object.create(null);
+    Object.defineProperty(curr, part, {
+      value: newNext,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
+    curr = newNext;
   }
-  if (isUnsafeKey(last)) throw new Error(`Unsafe path segment in '${path}'.`);
   Object.defineProperty(curr, last, {
     value,
     writable: true,
     enumerable: true,
-    configurable: true
+    configurable: true,
   });
 }
 
@@ -169,7 +173,10 @@ function parseValue(raw: string, state: Record<string, unknown>): unknown {
   if (/^\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
   if (trimmed === 'true') return true;
   if (trimmed === 'false') return false;
-  if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+  if (
+    (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+    (trimmed.startsWith('"') && trimmed.endsWith('"'))
+  ) {
     return trimmed.slice(1, -1);
   }
   return getByPath(state, trimmed);
@@ -218,7 +225,8 @@ function buildGraph(topology: Record<string, EdgeDefinition>): Map<string, Set<s
 
   for (const [target, edge] of Object.entries(topology)) {
     if (edge.kind === 'derives') edge.dependencies.forEach((dep) => add(dep, target));
-    if (edge.kind === 'requires') edge.conditions.flatMap(extractPaths).forEach((dep) => add(dep, target));
+    if (edge.kind === 'requires')
+      edge.conditions.flatMap(extractPaths).forEach((dep) => add(dep, target));
     if (edge.kind === 'influenced_by') edge.sources.forEach((source) => add(source, target));
     if (edge.kind === 'triggers') add(target, edge.target);
   }
@@ -228,32 +236,26 @@ function buildGraph(topology: Record<string, EdgeDefinition>): Map<string, Set<s
 
 function detectCycle(graph: Map<string, Set<string>>): string[] | null {
   const visited = new Set<string>();
-  const stack = new Set<string>();
-  const parent = new Map<string, string>();
+  const stackSet = new Set<string>();
+  const stackPath: string[] = [];
 
   const dfs = (nodeName: string): string[] | null => {
     visited.add(nodeName);
-    stack.add(nodeName);
+    stackSet.add(nodeName);
+    stackPath.push(nodeName);
 
     for (const next of graph.get(nodeName) ?? []) {
       if (!visited.has(next)) {
-        parent.set(next, nodeName);
         const found = dfs(next);
         if (found) return found;
-      } else if (stack.has(next)) {
-        const cycle = [next];
-        let current = nodeName;
-        while (current !== next) {
-          cycle.push(current);
-          current = parent.get(current) ?? next;
-        }
-        cycle.push(next);
-        cycle.reverse();
-        return cycle;
+      } else if (stackSet.has(next)) {
+        const idx = stackPath.indexOf(next);
+        return [...stackPath.slice(idx), next];
       }
     }
 
-    stack.delete(nodeName);
+    stackSet.delete(nodeName);
+    stackPath.pop();
     return null;
   };
 
@@ -267,15 +269,15 @@ function detectCycle(graph: Map<string, Set<string>>): string[] | null {
   return null;
 }
 
-function statespace(name: string, definition: StatespaceDefinition): RuntimeStatespace {
+export function statespace(name: string, definition: StatespaceDefinition): RuntimeStatespace {
   const state: Record<string, unknown> = {};
   for (const [key, def] of Object.entries(definition.nodes)) {
     state[key] = cloneDeep(def.initial);
   }
 
   const topology = definition.topology;
-  const subscribers = new Map<string, Set<Subscriber>>();
-  const eventSubscribers = new Map<string, Set<EventSubscriber<unknown>>>();
+  const subscribers = new Map<string, Set<() => void>>();
+  const eventSubscribers = new Map<string, Set<(payload: unknown) => void>>();
 
   const graph = buildGraph(topology);
   const cycle = detectCycle(graph);
@@ -287,19 +289,18 @@ function statespace(name: string, definition: StatespaceDefinition): RuntimeStat
   }
 
   const notify = (path: string) => {
-    const cbs = subscribers.get(path);
-    cbs?.forEach((cb) => cb());
-
+    subscribers.get(path)?.forEach((cb) => cb());
     const root = path.split('.')[0] ?? path;
-    subscribers.get(root)?.forEach((cb) => cb());
+    if (root !== path) subscribers.get(root)?.forEach((cb) => cb());
   };
 
   const emit = <K extends keyof TopologyEventMap>(type: K, payload: TopologyEventMap[K]) => {
-    const listeners = eventSubscribers.get(type);
-    listeners?.forEach((listener) => listener(payload));
+    eventSubscribers.get(type)?.forEach((listener) => listener(payload));
   };
 
-  const runtime = {
+  let depth = 0;
+
+  const runtime: RuntimeStatespace = {
     name,
     definition,
     get<T>(path: string): T {
@@ -309,6 +310,12 @@ function statespace(name: string, definition: StatespaceDefinition): RuntimeStat
       return cloneDeep(state);
     },
     set<T>(path: string, value: T): void {
+      if (depth > MAX_PROPAGATION_DEPTH) {
+        throw new Error(
+          `Max propagation depth (${MAX_PROPAGATION_DEPTH}) exceeded in statespace '${name}'. Check for unintended cycles.`,
+        );
+      }
+
       const root = path.split('.')[0] ?? path;
       const nodeDef = definition.nodes[root] as NodeDefinition<T> | undefined;
 
@@ -324,55 +331,62 @@ function statespace(name: string, definition: StatespaceDefinition): RuntimeStat
       setByPath(state, path, next);
       notify(path);
 
-      for (const [target, edge] of Object.entries(topology)) {
-        const started = Date.now();
-        if (edge.kind === 'derives') {
-          if (!edge.dependencies.some((dep) => pathAffects(dep, path))) continue;
-          const deps = edge.dependencies.map((dep) => runtime.get(dep));
-          const valueOrPromise = edge.compute(...deps);
-          if (valueOrPromise instanceof Promise) {
-            valueOrPromise
-              .then((resolved) => runtime.set(target, resolved))
-              .catch((error: unknown) => {
-                if (edge.options?.error) runtime.set(target, edge.options.error(error));
-              });
-          } else {
-            runtime.set(target, valueOrPromise);
+      depth++;
+      try {
+        for (const [target, edge] of Object.entries(topology)) {
+          const started = Date.now();
+
+          if (edge.kind === 'derives') {
+            if (!edge.dependencies.some((dep) => pathAffects(dep, path))) continue;
+            const deps = edge.dependencies.map((dep) => runtime.get(dep));
+            const valueOrPromise = edge.compute(...deps);
+            if (valueOrPromise instanceof Promise) {
+              valueOrPromise
+                .then((resolved) => runtime.set(target, resolved))
+                .catch((error: unknown) => {
+                  if (edge.options?.error) runtime.set(target, edge.options.error(error));
+                });
+              continue;
+            } else {
+              runtime.set(target, valueOrPromise);
+            }
+          } else if (edge.kind === 'requires') {
+            const deps = edge.conditions.flatMap(extractPaths);
+            if (!deps.some((dep) => pathAffects(dep, path))) continue;
+            runtime.set(
+              target,
+              edge.conditions.every((condition) => evalCondition(condition, state)),
+            );
+          } else if (edge.kind === 'influenced_by') {
+            if (!edge.sources.some((source) => pathAffects(source, path))) continue;
+            emit('influenced', { path: target, sources: edge.sources });
+          } else if (edge.kind === 'triggers') {
+            if (!pathAffects(target, path)) continue;
+            const result = edge.effect(runtime.get(target), runtime.getState());
+            if (result !== undefined) runtime.set(edge.target, result);
           }
-        }
 
-        if (edge.kind === 'requires') {
-          const deps = edge.conditions.flatMap(extractPaths);
-          if (!deps.some((dep) => pathAffects(dep, path))) continue;
-          runtime.set(target, edge.conditions.every((condition) => evalCondition(condition, state)));
+          const elapsed = Date.now() - started;
+          if (elapsed > 16) emit('slow-propagation', { path: target, ms: elapsed });
         }
-
-        if (edge.kind === 'influenced_by') {
-          if (!edge.sources.some((source) => pathAffects(source, path))) continue;
-          emit('influenced', { path: target, sources: edge.sources });
-        }
-
-        if (edge.kind === 'triggers') {
-          if (!pathAffects(target, path)) continue;
-          const result = edge.effect(runtime.get(target), runtime.getState());
-          if (result !== undefined) runtime.set(edge.target, result);
-        }
-
-        const elapsed = Date.now() - started;
-        if (elapsed > 16) emit('slow-propagation', { path: target, ms: elapsed });
+      } finally {
+        depth--;
       }
     },
     update<T>(path: string, updater: (prev: T) => T): void {
       runtime.set(path, updater(runtime.get<T>(path)));
     },
-    subscribe(path: string, callback: Subscriber): () => void {
+    subscribe(path: string, callback: () => void): () => void {
       if (!subscribers.has(path)) subscribers.set(path, new Set());
       subscribers.get(path)?.add(callback);
       return () => subscribers.get(path)?.delete(callback);
     },
-    subscribeEvent<K extends keyof TopologyEventMap>(type: K, callback: EventSubscriber<TopologyEventMap[K]>): () => void {
+    subscribeEvent<K extends keyof TopologyEventMap>(
+      type: K,
+      callback: (payload: TopologyEventMap[K]) => void,
+    ): () => void {
       if (!eventSubscribers.has(type)) eventSubscribers.set(type, new Set());
-      const set = eventSubscribers.get(type) as Set<EventSubscriber<TopologyEventMap[K]>>;
+      const set = eventSubscribers.get(type) as Set<(payload: TopologyEventMap[K]) => void>;
       set.add(callback);
       return () => set.delete(callback);
     },
@@ -399,19 +413,8 @@ function statespace(name: string, definition: StatespaceDefinition): RuntimeStat
       };
       walk(path);
       return out;
-    }
+    },
   };
 
   return runtime;
 }
-
-export {
-  defineConfig,
-  derives,
-  influenced_by,
-  node,
-  requires,
-  statespace,
-  triggers,
-  type RuntimeStatespace
-};

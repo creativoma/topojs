@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Topo — Cart Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/svg" href="/icon.svg" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #000000;
+        --surface: #0a0a0a;
+        --surface-2: #121212;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-subtle: rgba(255, 255, 255, 0.04);
+        --text: #ffffff;
+        --text-muted: #a1a1aa;
+        --text-faint: #52525b;
+        --accent: #4d9bff;
+        --accent-dim: rgba(77, 155, 255, 0.08);
+        --green: #4d9bff;
+        --green-dim: rgba(77, 155, 255, 0.06);
+        --amber: #4d9bff;
+        --red: #4d9bff;
+        --blue: #4d9bff;
+        --blue-dim: rgba(77, 155, 255, 0.1);
+        --blue-border: rgba(77, 155, 255, 0.25);
+        --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        --font-sans: 'DM Sans', system-ui, sans-serif;
+        --font-display: 'Syne', system-ui, sans-serif;
+        --radius: 8px;
+        --radius-sm: 5px;
+      }
+
+      html {
+        font-size: 14px;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      input[type='checkbox'] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid var(--border);
+        border-radius: 4px;
+        background: var(--surface-2);
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+        flex-shrink: 0;
+        position: relative;
+      }
+
+      input[type='checkbox']:checked {
+        background: var(--blue);
+        border-color: var(--blue);
+      }
+
+      input[type='checkbox']:checked::after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 1.5px;
+        width: 5px;
+        height: 9px;
+        border: 2px solid #000;
+        border-top: none;
+        border-left: none;
+        transform: rotate(40deg);
+      }
+
+      select {
+        appearance: none;
+        -webkit-appearance: none;
+        background: var(--surface-2)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237d8590'/%3E%3C/svg%3E")
+          no-repeat right 10px center;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        padding: 6px 28px 6px 10px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: border-color 0.15s;
+        outline: none;
+      }
+
+      select:focus {
+        border-color: var(--accent);
+      }
+
+      select option {
+        background: var(--surface-2);
+        color: var(--text);
+      }
+
+      button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

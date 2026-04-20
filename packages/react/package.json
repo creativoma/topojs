@@ -1,6 +1,25 @@
 {
-  "name": "@topo/react",
+  "name": "@topojs/react",
   "version": "0.1.0",
+  "description": "React hooks for Topo — useNode, useNodes, useMutation, useTopology",
+  "keywords": [
+    "state-management",
+    "graph",
+    "topology",
+    "react",
+    "hooks"
+  ],
+  "homepage": "https://github.com/creativoma/topojs",
+  "bugs": {
+    "url": "https://github.com/creativoma/topojs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/creativoma/topojs.git",
+    "directory": "packages/react"
+  },
+  "license": "MIT",
+  "author": "Mariano Alvarez",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -12,20 +31,34 @@
       "require": "./dist/index.cjs"
     }
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "sideEffects": false,
   "peerDependencies": {
     "react": ">=18"
   },
   "dependencies": {
-    "@topo/core": "workspace:*"
+    "@topojs/core": "workspace:*"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
-    "react": "^18.3.1",
-    "tsup": "^8.3.0"
+    "@testing-library/react": "^16.3.2",
+    "jsdom": "^29.0.2",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tsup": "^8.5.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

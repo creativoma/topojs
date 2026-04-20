@@ -1,18 +1,54 @@
 {
-  "name": "@topo/cli",
+  "name": "@topojs/cli",
   "version": "0.1.0",
+  "description": "CLI for Topo — analyze, visualize, check, optimize, export and trace statespaces",
+  "keywords": [
+    "state-management",
+    "graph",
+    "topology",
+    "cli"
+  ],
+  "homepage": "https://github.com/creativoma/topojs",
+  "bugs": {
+    "url": "https://github.com/creativoma/topojs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/creativoma/topojs.git",
+    "directory": "packages/cli"
+  },
+  "license": "MIT",
+  "author": "Mariano Alvarez",
   "type": "module",
   "bin": {
     "topo": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --sourcemap",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
-    "tsup": "^8.3.0"
+    "@types/node": "^25.6.0",
+    "tsup": "^8.5.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

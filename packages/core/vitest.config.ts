@@ -5,7 +5,7 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     coverage: {
       enabled: true,
-      reporter: ['text']
-    }
-  }
+      reporter: ['text'],
+    },
+  },
 });

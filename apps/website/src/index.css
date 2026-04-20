@@ -1,0 +1,205 @@
+@import 'tailwindcss';
+@import '@xyflow/react/dist/style.css';
+
+html,
+body {
+  background: var(--color-bg);
+}
+
+/* ── CSS Variables ── */
+:root {
+  --color-bg: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-2: #121212;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.04);
+  --color-text: #ffffff;
+  --color-text-muted: #a1a1aa;
+  --color-text-dim: #52525b;
+  --color-accent: #4d9bff;
+  --color-accent-dim: rgba(77, 155, 255, 0.08);
+  --color-accent-border: rgba(77, 155, 255, 0.25);
+  --color-accent-glow: rgba(77, 155, 255, 0.4);
+}
+
+/* ── React Flow theme overrides ── */
+.react-flow {
+  background: transparent !important;
+}
+.react-flow__edge-path {
+  stroke: var(--color-accent);
+  stroke-width: 1.5;
+}
+.react-flow__arrowhead path {
+  fill: var(--color-accent);
+}
+.react-flow__handle {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+@theme {
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'Fira Code', 'JetBrains Mono', monospace;
+}
+
+/* ── Syntax highlighting tokens ── */
+.tok-kw {
+  color: #4d9bff;
+}
+.tok-fn {
+  color: #7eb8ff;
+}
+.tok-str {
+  color: #4d9bff;
+}
+.tok-cm {
+  color: #52525b;
+  font-style: italic;
+}
+.tok-num {
+  color: #4d9bff;
+}
+.tok-prop {
+  color: #7eb8ff;
+}
+.tok-dim {
+  color: #3f3f46;
+}
+
+/* ── Dot-grid hero background ── */
+.dot-grid {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(77, 155, 255, 0.06) 0%, transparent 70%),
+    radial-gradient(circle, rgba(77, 155, 255, 0.08) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    28px 28px;
+}
+
+/* ── Graph node pulse animation ── */
+@keyframes node-pulse {
+  0%,
+  100% {
+    stroke: rgba(77, 155, 255, 0.35);
+  }
+  50% {
+    stroke: rgba(77, 155, 255, 1);
+    filter: drop-shadow(0 0 8px rgba(77, 155, 255, 0.55));
+  }
+}
+
+@keyframes edge-flow {
+  0%,
+  100% {
+    stroke-opacity: 0.12;
+  }
+  50% {
+    stroke-opacity: 0.75;
+  }
+}
+
+@keyframes label-show {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.node-user {
+  animation: node-pulse 3.6s ease-in-out infinite 0s;
+}
+.node-cart {
+  animation: node-pulse 3.6s ease-in-out infinite 1.2s;
+}
+.node-checkout {
+  animation: node-pulse 3.6s ease-in-out infinite 2.4s;
+}
+.edge-derives {
+  animation: edge-flow 3.6s ease-in-out infinite 0.6s;
+}
+.edge-requires {
+  animation: edge-flow 3.6s ease-in-out infinite 1.8s;
+}
+.lbl-derives {
+  animation: label-show 3.6s ease-in-out infinite 0.6s;
+}
+.lbl-requires {
+  animation: label-show 3.6s ease-in-out infinite 1.8s;
+}
+
+/* ── Section reveal ── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  opacity: 0;
+  animation: fade-up 0.65s ease-out forwards;
+}
+
+/* ── Gradient border card ── */
+.card-glow {
+  background: linear-gradient(135deg, rgba(77, 155, 255, 0.06), transparent);
+  border: 1px solid rgba(77, 155, 255, 0.15);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+.card-glow:hover {
+  border-color: rgba(77, 155, 255, 0.4);
+  background: linear-gradient(135deg, rgba(77, 155, 255, 0.12), transparent);
+}
+
+/* ── Code block surface ── */
+.code-surface {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.code-surface pre {
+  overflow-x: auto;
+  padding: 1.25rem 1.5rem;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  color: #d4d4d8;
+  tab-size: 2;
+}
+
+.code-surface pre::-webkit-scrollbar {
+  height: 4px;
+}
+.code-surface pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+.code-surface pre::-webkit-scrollbar-thumb {
+  background: rgba(77, 155, 255, 0.3);
+  border-radius: 2px;
+}
+
+/* ── Install pill ── */
+.install-pill {
+  background: rgba(10, 10, 10, 0.9);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+/* ── Scrollbar global ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(77, 155, 255, 0.3) transparent;
+}

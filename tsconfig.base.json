@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@topo/core": ["packages/core/src/index.ts"],
-      "@topo/react": ["packages/react/src/index.ts"],
-      "@topo/cli": ["packages/cli/src/index.ts"],
-      "@topo/vite": ["packages/vite-plugin/src/index.ts"]
+      "@topojs/core": ["packages/core/src/index.ts"],
+      "@topojs/react": ["packages/react/src/index.ts"],
+      "@topojs/cli": ["packages/cli/src/index.ts"],
+      "@topojs/vite": ["packages/vite-plugin/src/index.ts"]
     },
     "target": "ES2022",
     "module": "ESNext",

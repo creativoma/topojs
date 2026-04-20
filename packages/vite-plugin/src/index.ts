@@ -1,24 +1,24 @@
+import type { Plugin } from 'vite';
+
 export interface TopoPluginOptions {
   visualize?: boolean;
   strictCycles?: boolean;
 }
 
-export function topoPlugin(options: TopoPluginOptions = {}) {
+export function topoPlugin(options: TopoPluginOptions = {}): Plugin {
   return {
     name: 'topo-plugin',
-    configureServer(server: {
-      middlewares: { use: (path: string, handler: (req: unknown, res: { end: (body: string) => void }) => void) => void };
-    }) {
+    configureServer(server) {
       if (!options.visualize) return;
       server.middlewares.use('/topo', (_req, res) => {
         res.end(
           JSON.stringify({
             name: 'topo-visualizer',
             status: 'alpha',
-            strictCycles: options.strictCycles ?? true
-          })
+            strictCycles: options.strictCycles ?? true,
+          }),
         );
       });
-    }
+    },
   };
 }
