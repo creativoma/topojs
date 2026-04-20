@@ -1,0 +1,54 @@
+{
+  "name": "@topojs/core",
+  "version": "0.1.0",
+  "description": "Core runtime for Topo — statespace, nodes, edges, cycle detection and propagation",
+  "keywords": [
+    "state-management",
+    "graph",
+    "topology",
+    "typescript",
+    "statespace"
+  ],
+  "homepage": "https://github.com/creativoma/topojs",
+  "bugs": {
+    "url": "https://github.com/creativoma/topojs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/creativoma/topojs.git",
+    "directory": "packages/core"
+  },
+  "license": "MIT",
+  "author": "Mariano Alvarez",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

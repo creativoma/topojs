@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@topojs/core": ["packages/core/src/index.ts"],
+      "@topojs/react": ["packages/react/src/index.ts"],
+      "@topojs/cli": ["packages/cli/src/index.ts"],
+      "@topojs/vite": ["packages/vite-plugin/src/index.ts"]
+    },
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true
+  }
+}
