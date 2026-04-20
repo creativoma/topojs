@@ -37,7 +37,7 @@ export default function Header() {
               background: 'rgba(77,155,255,0.08)',
             }}
           >
-            v0.1.0-alpha
+            v0.1.0
           </span>
         </div>
 

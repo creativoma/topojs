@@ -14,7 +14,7 @@ export function topoPlugin(options: TopoPluginOptions = {}): Plugin {
         res.end(
           JSON.stringify({
             name: 'topo-visualizer',
-            status: 'alpha',
+            status: 'stable',
             strictCycles: options.strictCycles ?? true,
           }),
         );

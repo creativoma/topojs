@@ -217,7 +217,7 @@ export default function Hero() {
                 animation: 'node-pulse 2s ease-in-out infinite',
               }}
             />
-            TypeScript · Framework-agnostic · v0.1.0-alpha
+            TypeScript · Framework-agnostic · v0.1.0
           </div>
 
           <h1

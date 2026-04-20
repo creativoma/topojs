@@ -5,7 +5,7 @@ type Command = 'analyze' | 'visualize' | 'check' | 'optimize' | 'export' | 'trac
 function output(command: Command, target?: string): string {
   switch (command) {
     case 'analyze':
-      return 'Topo analyze: topology scan completed (alpha runtime).';
+      return 'Topo analyze: topology scan completed.';
     case 'visualize':
       return 'Topo visualize: open http://localhost:3001/topo (placeholder visualizer).';
     case 'check':

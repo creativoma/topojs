@@ -54,7 +54,7 @@ describe('topoPlugin', () => {
     routes[0]?.handler(undefined, { end });
     const parsed = JSON.parse(end.mock.calls[0]?.[0] as string) as Record<string, unknown>;
     expect(parsed['name']).toBe('topo-visualizer');
-    expect(parsed['status']).toBe('alpha');
+    expect(parsed['status']).toBe('stable');
   });
 
   it('strictCycles defaults to true in the response', () => {
