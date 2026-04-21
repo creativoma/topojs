@@ -7,8 +7,22 @@ import {
   optimizeSpace,
   run,
   traceSpace,
+  visualizeSpace,
 } from '../src/index';
 import type { RuntimeStatespace } from '@topojs/core';
+
+vi.mock('http', () => {
+  const mockServer = {
+    listen: vi.fn((_port: number, cb: () => void) => {
+      cb();
+      return mockServer;
+    }),
+    on: vi.fn(() => mockServer),
+  };
+  return { createServer: vi.fn(() => mockServer) };
+});
+
+vi.mock('child_process', () => ({ exec: vi.fn() }));
 
 // Minimal fixture statespace — matches the shape of RuntimeStatespace without importing core
 function makeFixture(): RuntimeStatespace {
@@ -231,6 +245,38 @@ describe('run', () => {
   it('export returns 0 with --format mermaid', async () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     expect(await run(['node', 'topo', 'export', FIXTURE_PATH, '--format', 'mermaid'])).toBe(0);
+    log.mockRestore();
+  });
+
+  it('visualize returns 0 with fixture file', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    expect(await run(['node', 'topo', 'visualize', FIXTURE_PATH])).toBe(0);
+    log.mockRestore();
+  });
+
+  it('visualize returns 0 with --port option', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    expect(await run(['node', 'topo', 'visualize', FIXTURE_PATH, '--port', '8080'])).toBe(0);
+    log.mockRestore();
+  });
+});
+
+describe('visualizeSpace', () => {
+  it('starts server and logs the URL', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await visualizeSpace([makeFixture()] as any[], 7331);
+    const output = log.mock.calls.flat().join('\n');
+    expect(output).toContain('localhost:7331');
+    log.mockRestore();
+  });
+
+  it('uses the provided port', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await visualizeSpace([makeFixture()] as any[], 9000);
+    const output = log.mock.calls.flat().join('\n');
+    expect(output).toContain('9000');
     log.mockRestore();
   });
 });
