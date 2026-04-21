@@ -63,7 +63,8 @@ export function useMutation(
     () => ({
       set: <T>(value: T) => space.set(path, value),
       update: <T>(updater: (prev: T) => T) => space.update(path, updater),
-      append: <T>(item: T) => space.update<T[]>(path, (prev) => [...(prev ?? []), item]),
+      append: <T>(item: T) =>
+        space.update<T[]>(path, (prev) => [...(Array.isArray(prev) ? prev : []), item]),
     }),
     [path, space],
   );
