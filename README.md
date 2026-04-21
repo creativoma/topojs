@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version" />
+  <img src="https://img.shields.io/npm/v/@topojs/core?label=version&color=blue" alt="Version" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
   <img src="https://img.shields.io/badge/TypeScript-5.4+-blue" alt="TypeScript" />
   <img src="https://img.shields.io/badge/framework-agnostic-purple" alt="Framework" />
