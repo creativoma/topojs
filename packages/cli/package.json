@@ -1,6 +1,6 @@
 {
   "name": "@topojs/cli",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "CLI for Topo — analyze, visualize, check, optimize, export and trace statespaces",
   "keywords": [
     "state-management",
