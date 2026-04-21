@@ -10,8 +10,7 @@
   <a href="#installation">Installation</a> •
   <a href="#core-concepts">Concepts</a> •
   <a href="#quick-start">Quick Start</a> •
-  <a href="#api-reference">API</a> •
-  <a href="#roadmap">Roadmap</a>
+  <a href="#api-reference">API</a>
 </p>
 
 <p align="center">
@@ -46,23 +45,27 @@ const store = create({
   checkout: { ... }, // Depends on cart AND user AND products
 });
 
-// ✅ Topo: Explicit graph topology
-statespace ShoppingApp {
-  nodes {
-    user: UserState
-    cart: CartState
-    products: ProductsState
-    checkout: CheckoutState
-  }
+// ✅ Topo: Explicit graph topology — dependencies are declared, not hidden
+import { statespace, node, derives, requires, influencedBy } from '@topojs/core';
 
-  topology {
-    cart.discount <- derives(user.membership)
-    products.available <- derives(user.region)
-    checkout.canProceed <- requires(cart.valid, user.authenticated)
-    user.recommendations <- influencedBy(cart.history, products.viewed)
-  }
-}
-// Compiler analyzes the graph: no cycles, optimal update order, minimal subscriptions
+const ShoppingApp = statespace('ShoppingApp', {
+  nodes: {
+    user: node({ initial: { membership: 'free', region: 'US', authenticated: false } }),
+    cart: node({ initial: { items: [], discount: 0 } }),
+    products: node({ initial: { items: [] } }),
+    checkout: node({ initial: { canProceed: false } }),
+  },
+  topology: {
+    'cart.discount': derives(['user.membership'], (membership) =>
+      membership === 'premium' ? 0.2 : membership === 'plus' ? 0.1 : 0,
+    ),
+    'products.available': derives(['user.region'], async (region) => fetchProducts(region)),
+    'checkout.canProceed': requires(['cart.items.length > 0', 'user.authenticated']),
+    'user.recommendations': influencedBy(['cart.items', 'products.available']),
+  },
+  constraints: { noCyclesThrough: ['checkout'] },
+});
+// Dependencies are explicit. Update order is computed. Cycles are detected at runtime.
 ```
 
 ---
@@ -108,35 +111,16 @@ This is a topology. Topo understands it.
 | `influencedBy` | A may update when B changes    | Eventual consistency, emits event |
 | `triggers`     | Change in A causes effect on B | One-way, event-based              |
 
-### Topology Constraints
-
-```typescript
-constraints {
-  // Prevent circular dependencies
-  no_cycles_through(checkout)
-
-  // Define consistency requirements
-  strong_consistency(cart.total)       // Always up-to-date
-  eventual_consistency(recommendations) // Can lag
-
-  // Performance boundaries
-  max_fanout(user, 5)  // User can affect max 5 other nodes
-  max_depth(3)         // Max 3 hops from any source
-}
-```
-
 ---
 
 ## Key Features
 
-| Feature                    | Description                                          |
-| -------------------------- | ---------------------------------------------------- |
-| **Explicit Relationships** | All state dependencies are declared, not hidden      |
-| **Cycle Detection**        | Compiler catches circular dependencies at build time |
-| **Optimal Updates**        | System computes ideal update order                   |
-| **Minimal Subscriptions**  | Components subscribe to exactly what they need       |
-| **Topology Visualization** | See your state graph in real-time                    |
-| **Consistency Modes**      | Choose strong or eventual consistency per edge       |
+| Feature                    | Description                                                     |
+| -------------------------- | --------------------------------------------------------------- |
+| **Explicit Relationships** | All state dependencies are declared, not hidden                 |
+| **Cycle Detection**        | Circular dependencies are caught when the statespace is created |
+| **Optimal Updates**        | Update order is computed from the dependency graph              |
+| **Minimal Subscriptions**  | Components subscribe to exactly what they need                  |
 
 ---
 
@@ -162,8 +146,8 @@ import { topoPlugin } from '@topojs/vite';
 export default {
   plugins: [
     topoPlugin({
-      visualize: true, // Enable topology visualizer at /topo
-      strictCycles: true, // Fail on any cycles
+      visualize: true, // Exposes a /topo endpoint in dev mode
+      strictCycles: true,
     }),
   ],
 };
@@ -182,7 +166,6 @@ import { statespace, node, derives, requires, influencedBy } from '@topojs/core'
 export const AppStatespace = statespace('ShoppingApp', {
   // Define state nodes
   nodes: {
-    // Each node has a type and initial state
     user: node<UserState>({
       initial: { authenticated: false, membership: 'free', region: 'US' },
     }),
@@ -217,63 +200,19 @@ export const AppStatespace = statespace('ShoppingApp', {
     // Checkout can only proceed if cart is valid AND user is authenticated
     'checkout.canProceed': requires(['cart.items.length > 0', 'user.authenticated']),
 
-    // Recommendations are influenced by history (eventual consistency OK)
-    'user.recommendations': influencedBy(['cart.history', 'products.viewed'], {
-      debounce: '500ms',
-    }),
+    // Recommendations are influenced by history
+    'user.recommendations': influencedBy(['cart.history', 'products.viewed']),
   },
 
   // Define constraints
   constraints: {
     // Checkout must not be in any cycles
     noCyclesThrough: ['checkout'],
-
-    // Cart total must always be correct (strong consistency)
-    strongConsistency: ['cart.total'],
-
-    // Recommendations can lag (eventual consistency)
-    eventualConsistency: ['user.recommendations'],
   },
 });
 ```
 
-### 2. Compile and Analyze
-
-```bash
-$ npx topo analyze
-
-Analyzing ShoppingApp statespace...
-
-Topology:
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│    user ─────────────┬────────────────┬──────────────────┐      │
-│     │                │                │                  │      │
-│     │ membership     │ region         │ authenticated    │      │
-│     ▼                ▼                │                  │      │
-│  cart.discount    products.available │                  │      │
-│     │                │                │                  │      │
-│     └────────────────┴────────────────┘                  │      │
-│                      │                                   │      │
-│                      ▼                                   │      │
-│             checkout.canProceed ◄────────────────────────┘      │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-
-Analysis:
-  ✓ No cycles detected
-  ✓ All constraints satisfied
-  ✓ Strong consistency paths validated
-
-Optimizations applied:
-  • cart.discount: cached (changes only when user.membership changes)
-  • products.available: async with loading state
-  • checkout.canProceed: batched evaluation
-
-Subscription graph generated: 4 nodes, 6 edges
-```
-
-### 3. Use in React Components
+### 2. Use in React Components
 
 ```tsx
 // components/Cart.tsx
@@ -305,7 +244,7 @@ function Cart() {
 }
 ```
 
-### 4. Mutate State
+### 3. Mutate State
 
 ```tsx
 // components/AddToCart.tsx
@@ -320,27 +259,6 @@ function AddToCart({ product }) {
   return <button onClick={() => addItem.append(product)}>Add to Cart</button>;
 }
 ```
-
----
-
-## Topology Visualization
-
-Topo includes a real-time visualizer for development:
-
-```bash
-# Start dev server with visualizer
-npx topo dev --visualize
-
-# Open http://localhost:3001/topo
-```
-
-The visualizer shows:
-
-- **Node graph** with current values
-- **Edge highlighting** when updates propagate
-- **Update order** animation
-- **Bottleneck detection** (nodes with high fanout)
-- **Cycle warnings** in real-time
 
 ---
 
@@ -360,10 +278,6 @@ statespace(name: string, {
 
   constraints?: {
     noCyclesThrough?: string[];
-    strongConsistency?: string[];
-    eventualConsistency?: string[];
-    maxFanout?: { [node: string]: number };
-    maxDepth?: number;
   };
 });
 ```
@@ -373,9 +287,8 @@ statespace(name: string, {
 ```typescript
 node<T>({
   initial: T;                           // Initial value
-  persist?: boolean | PersistConfig;    // Persistence configuration
-  validate?: (value: T) => boolean;     // Validation function
-  middleware?: Middleware<T>[];         // Update middleware
+  validate?: (value: T) => boolean;     // Validation function — throws on failure
+  middleware?: Middleware<T>[];         // Transform value before it is stored
 });
 ```
 
@@ -401,10 +314,9 @@ requires(
   conditions: string[],  // Can include expressions: 'cart.items.length > 0'
 )
 
-// Eventual consistency
+// Eventual consistency — emits 'influenced' event, does not set value
 influencedBy(
   sources: string[],
-  options?: { debounce?: string; throttle?: string }
 )
 
 // Event trigger
@@ -433,8 +345,8 @@ mutation.update((prev) => next);
 mutation.append(item); // For arrays
 
 // Subscribe to topology events
-useTopologyEvent(statespace, 'cycle-detected', handler);
-useTopologyEvent(statespace, 'slow-propagation', handler);
+useTopologyEvent(statespace, 'influenced', handler); // influencedBy edge fired
+useTopologyEvent(statespace, 'slow-propagation', handler); // propagation > 16ms
 ```
 
 ### CLI Commands
@@ -444,26 +356,9 @@ topo analyze              # Analyze statespace topology
 topo visualize            # Open interactive visualizer
 topo check                # Validate constraints
 topo optimize             # Suggest optimizations
-topo export               # Export topology graph (DOT, JSON, Mermaid)
+topo export               # Export topology graph
 topo trace <path>         # Trace updates through topology
 ```
-
----
-
-## Configuration
-
-`defineConfig` is a typed helper for future config files — it returns its argument as-is:
-
-```typescript
-// topo.config.ts
-import { defineConfig } from '@topojs/core';
-
-export default defineConfig({
-  // Config options are planned for Beta — see Roadmap
-});
-```
-
-> Full configuration support (analysis rules, persistence, devtools, visualization options) is planned for the Beta release.
 
 ---
 
@@ -517,22 +412,22 @@ export const EcommerceStatespace = statespace('Ecommerce', {
     ),
 
     // Recommendations influenced by behavior
-    'user.recommendations': influencedBy(
-      ['cart.items', 'wishlist.items', 'orders.history', 'catalog.viewed'],
-      { debounce: '1s' },
-    ),
+    'user.recommendations': influencedBy([
+      'cart.items',
+      'wishlist.items',
+      'orders.history',
+      'catalog.viewed',
+    ]),
 
     // Order completion triggers history update
-    'checkout.complete': triggers('orders.history', (order) => {
-      return [...state.orders.history, order];
+    'checkout.complete': triggers('orders.history', (order, currentState) => {
+      const { orders } = currentState as { orders: OrdersState };
+      return [...orders.history, order];
     }),
   },
 
   constraints: {
     noCyclesThrough: ['checkout', 'orders'],
-    strongConsistency: ['cart.total', 'cart.finalTotal'],
-    eventualConsistency: ['user.recommendations'],
-    maxFanout: { user: 6 },
   },
 });
 ```
@@ -562,32 +457,20 @@ export const CollabStatespace = statespace('Collaboration', {
     }),
 
     // Presence broadcasts on any user action
-    'presence.update': influencedBy(['cursors.*', 'selections.*'], { throttle: '50ms' }),
+    'presence.update': influencedBy(['cursors.*', 'selections.*']),
 
     // History tracking
-    'document.change': triggers('history.undo', (change) => {
-      return [...state.history.undo, change.previous];
+    'document.change': triggers('history.undo', (change, currentState) => {
+      const { history } = currentState as { history: HistoryState };
+      return [...history.undo, change];
     }),
   },
 
   constraints: {
-    strongConsistency: ['document.content', 'document.version'],
-    eventualConsistency: ['presence', 'cursors', 'comments.positioned'],
-    maxDepth: 2, // Keep update chains short for real-time
+    noCyclesThrough: ['document'],
   },
 });
 ```
-
----
-
-## Roadmap
-
-| Phase      | Status     | Features                                            |
-| ---------- | ---------- | --------------------------------------------------- |
-| **Alpha**  | 🟢 Current | Core topology, React bindings, basic visualizer     |
-| **Beta**   | 🟡 Q2 2026 | DevTools extension, persistence, Vue/Svelte support |
-| **1.0**    | ⚪ Q4 2026 | Production optimizations, multi-tab sync, SSR       |
-| **Future** | ⚪ 2027+   | Distributed state, topology migrations, AI analysis |
 
 ---
 
@@ -599,7 +482,7 @@ Those libraries manage state values. Topo manages state _topology_—the relatio
 
 **Q: What about performance?**
 
-Topo's topology analysis happens at build time. Runtime is a lightweight subscription system with optimal update ordering. Often faster than manual solutions because it eliminates redundant updates.
+Topo's topology analysis happens at runtime when the statespace is created. Runtime is a lightweight subscription system with optimal update ordering. Often faster than manual solutions because it eliminates redundant updates.
 
 **Q: Can I migrate incrementally?**
 
