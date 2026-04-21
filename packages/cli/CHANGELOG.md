@@ -1,5 +1,11 @@
 # @topojs/cli
 
+## 0.4.0
+
+### Minor Changes
+
+- a894c6f: Add `visualize` command with interactive canvas-based graph visualizer served over HTTP. Supports `--port` option (default 7331). Renders nodes and edges with force-directed layout, pan/zoom, and per-edge-kind color coding.
+
 ## 0.3.0
 
 ### Minor Changes
