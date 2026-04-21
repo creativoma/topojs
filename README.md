@@ -124,6 +124,40 @@ This is a topology. Topo understands it.
 
 ---
 
+## How Topo Compares
+
+Most state libraries manage **values**. Topo manages **relationships**.
+
+| | Redux | Zustand | Jotai | Recoil | MobX | XState | **Topo** |
+|---|---|---|---|---|---|---|---|
+| **State model** | Tree | Tree | Atoms | Atoms + selectors | Object graph | FSM | **Directed graph** |
+| **Dependencies** | Implicit | Implicit | Atom links | Atom links | Computed props | Transitions | **Explicit edge types** |
+| **Cycle detection** | None | None | None | Runtime | None | Built-in (FSM) | **Creation-time DFS** |
+| **Update ordering** | Manual reducers | Manual | Atom order | Atom order | Implicit reactivity | Transition-based | **Automatic topo sort** |
+| **Async state** | Middleware/thunks | Custom hooks | Suspense/loadables | Loadables | async/await | Built-in | **First-class in `derives`** |
+| **Graph introspection** | No | No | No | No | No | States/transitions | **`dependsOn`, `affects`, `updateOrder`** |
+| **Constraint system** | No | No | No | No | No | FSM guards | **`noCyclesThrough`, consistency levels** |
+| **Dev tooling** | Time-travel debugger | DevTools ext | DevTools ext | Chrome ext | MobX DevTools | XState Viz | **CLI + interactive Vite visualizer** |
+
+### What only Topo does
+
+**Four explicit edge types** — instead of a single "subscribe and compute" pattern, Topo names the _kind_ of relationship:
+
+```
+derives       → A is recomputed from B (sync or async)
+requires      → A is a boolean gate; guards other operations
+influencedBy  → A may update eventually when B changes (fires event, no auto-set)
+triggers      → change in A executes a side effect on B
+```
+
+**Cycle detection at creation time** — the statespace constructor runs a DFS over the declared topology. A cycle throws immediately, before any user interaction, not when a user action happens to trigger the loop.
+
+**`noCyclesThrough` constraint** — cycles can be allowed in low-risk parts of the graph while strictly forbidding them through critical nodes like `checkout` or `orders`.
+
+**Topology as queryable metadata** — every `RuntimeStatespace` exposes `dependsOn(path)`, `affects(path)`, and `updateOrder(path)`. Components can read the graph structure at runtime, and the CLI can analyze or export it.
+
+---
+
 ## Installation
 
 ```bash
