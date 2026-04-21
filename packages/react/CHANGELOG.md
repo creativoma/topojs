@@ -1,5 +1,15 @@
 # @topojs/react
 
+## 0.2.3
+
+### Patch Changes
+
+- 8b1d3f2: chore: add default export condition for Webpack 4 compatibility, enable treeshake in tsup builds, add sideEffects false to cli, add peerDependenciesMeta to react
+- 8b1d3f2: fix: use Array.isArray guard in useMutation append to prevent spreading non-array truthy values
+- Updated dependencies [8b1d3f2]
+- Updated dependencies [8b1d3f2]
+  - @topojs/core@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes
