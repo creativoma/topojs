@@ -35,7 +35,7 @@ export interface InfluencedByEdge {
 export interface TriggersEdge {
   kind: 'triggers';
   target: string;
-  effect: (value: unknown, state: unknown) => unknown;
+  effect: (value: unknown, state: Record<string, unknown>) => unknown;
 }
 
 export type EdgeDefinition = DerivesEdge | RequiresEdge | InfluencedByEdge | TriggersEdge;
@@ -127,6 +127,7 @@ function getByPath(obj: unknown, path: string): unknown {
   if (!path) return obj;
   return path.split('.').reduce<unknown>((acc, key) => {
     if (acc == null) return undefined;
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') return undefined;
     return (acc as Record<string, unknown>)[key];
   }, obj);
 }
@@ -280,6 +281,20 @@ export function statespace(name: string, definition: StatespaceDefinition): Runt
   const eventSubscribers = new Map<string, Set<(payload: unknown) => void>>();
 
   const graph = buildGraph(topology);
+
+  const sourceEdges = new Map<string, Array<[string, EdgeDefinition]>>();
+  for (const [target, edge] of Object.entries(topology)) {
+    let sources: string[];
+    if (edge.kind === 'derives') sources = edge.dependencies;
+    else if (edge.kind === 'requires') sources = edge.conditions.flatMap(extractPaths);
+    else if (edge.kind === 'influenced_by') sources = edge.sources;
+    else sources = [target]; // triggers: the watched path is the source
+    for (const source of sources) {
+      if (!sourceEdges.has(source)) sourceEdges.set(source, []);
+      sourceEdges.get(source)!.push([target, edge]);
+    }
+  }
+
   const cycle = detectCycle(graph);
   if (cycle) {
     const guarded = definition.constraints?.noCyclesThrough;
@@ -289,9 +304,11 @@ export function statespace(name: string, definition: StatespaceDefinition): Runt
   }
 
   const notify = (path: string) => {
-    subscribers.get(path)?.forEach((cb) => cb());
-    const root = path.split('.')[0] ?? path;
-    if (root !== path) subscribers.get(root)?.forEach((cb) => cb());
+    const parts = path.split('.');
+    for (let i = parts.length; i > 0; i--) {
+      const prefix = parts.slice(0, i).join('.');
+      subscribers.get(prefix)?.forEach((cb) => cb());
+    }
   };
 
   const emit = <K extends keyof TopologyEventMap>(type: K, payload: TopologyEventMap[K]) => {
@@ -333,11 +350,23 @@ export function statespace(name: string, definition: StatespaceDefinition): Runt
 
       depth++;
       try {
-        for (const [target, edge] of Object.entries(topology)) {
+        const seen = new Set<string>();
+        const affected: Array<[string, EdgeDefinition]> = [];
+        for (const [source, entries] of sourceEdges) {
+          if (pathAffects(source, path)) {
+            for (const [tgt, edge] of entries) {
+              if (!seen.has(tgt)) {
+                seen.add(tgt);
+                affected.push([tgt, edge]);
+              }
+            }
+          }
+        }
+
+        for (const [target, edge] of affected) {
           const started = Date.now();
 
           if (edge.kind === 'derives') {
-            if (!edge.dependencies.some((dep) => pathAffects(dep, path))) continue;
             const deps = edge.dependencies.map((dep) => runtime.get(dep));
             const valueOrPromise = edge.compute(...deps);
             if (valueOrPromise instanceof Promise) {
@@ -351,17 +380,13 @@ export function statespace(name: string, definition: StatespaceDefinition): Runt
               runtime.set(target, valueOrPromise);
             }
           } else if (edge.kind === 'requires') {
-            const deps = edge.conditions.flatMap(extractPaths);
-            if (!deps.some((dep) => pathAffects(dep, path))) continue;
             runtime.set(
               target,
               edge.conditions.every((condition) => evalCondition(condition, state)),
             );
           } else if (edge.kind === 'influenced_by') {
-            if (!edge.sources.some((source) => pathAffects(source, path))) continue;
             emit('influenced', { path: target, sources: edge.sources });
           } else if (edge.kind === 'triggers') {
-            if (!pathAffects(target, path)) continue;
             const result = edge.effect(runtime.get(target), runtime.getState());
             if (result !== undefined) runtime.set(edge.target, result);
           }
