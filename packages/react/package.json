@@ -1,6 +1,6 @@
 {
   "name": "@topojs/react",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "React hooks for TopoJS — useNode, useNodes, useMutation, useTopology",
   "keywords": [
     "state-management",

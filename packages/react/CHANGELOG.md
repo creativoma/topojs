@@ -1,5 +1,13 @@
 # @topojs/react
 
+## 0.2.4
+
+### Patch Changes
+
+- a894c6f: Update package descriptions to use "TopoJS" branding consistently.
+- Updated dependencies [a894c6f]
+  - @topojs/core@0.2.4
+
 ## 0.2.3
 
 ### Patch Changes
