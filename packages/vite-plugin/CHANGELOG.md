@@ -1,5 +1,11 @@
 # @topojs/vite
 
+## 0.2.2
+
+### Patch Changes
+
+- 2dc7c13: chore: updated workflows
+
 ## 0.2.1
 
 ### Patch Changes

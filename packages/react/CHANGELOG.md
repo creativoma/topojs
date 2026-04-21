@@ -1,5 +1,13 @@
 # @topojs/react
 
+## 0.2.2
+
+### Patch Changes
+
+- 2dc7c13: chore: updated workflows
+- Updated dependencies [2dc7c13]
+  - @topojs/core@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes
