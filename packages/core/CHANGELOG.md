@@ -1,5 +1,11 @@
 # @topojs/core
 
+## 0.2.1
+
+### Patch Changes
+
+- fcfa394: feat: implement dynamic versioning in Header and Hero components
+
 ## 0.2.0
 
 ### Minor Changes
