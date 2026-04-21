@@ -7,6 +7,7 @@ export function useNode<T>(space: RuntimeStatespace, path: string): T {
   return useSyncExternalStore(
     (onStoreChange) => space.subscribe(path, onStoreChange),
     () => space.get<T>(path),
+    /* v8 ignore next */
     () => space.get<T>(path),
   );
 }

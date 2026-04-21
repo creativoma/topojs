@@ -4,6 +4,7 @@ import Problem from './components/Problem';
 import Features from './components/Features';
 import Packages from './components/Packages';
 import QuickStart from './components/QuickStart';
+import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
       <Features />
       <Packages />
       <QuickStart />
+      <FAQ />
       <Footer />
     </div>
   );

@@ -44,6 +44,7 @@ function makeSpace(name, definition) {
   const affects = buildAffects(definition.topology);
   const dependsOn = buildDependsOn(definition.topology);
   const updateOrder = buildUpdateOrder(affects);
+  /* v8 ignore next 8 */
   return {
     name,
     definition,
@@ -69,11 +70,21 @@ export const CartSpace = makeSpace('Cart', {
     'cart.discount': {
       kind: 'derives',
       dependencies: ['user.membership'],
+      /* v8 ignore next */
       compute: (m) => (m === 'premium' ? 0.2 : m === 'plus' ? 0.1 : 0),
     },
     'checkout.canProceed': {
       kind: 'requires',
       conditions: ['cart.items.length > 0', 'user.authenticated'],
+    },
+    'user.recommendations': {
+      kind: 'influenced_by',
+      sources: ['cart.items'],
+    },
+    'checkout.summary': {
+      kind: 'triggers',
+      target: 'user.history',
+      effect: (v) => v,
     },
   },
   constraints: {

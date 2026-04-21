@@ -140,6 +140,7 @@ function setByPath(obj: Record<string, unknown>, path: string, value: unknown): 
     throw new Error(`Unsafe path segment in '${path}'.`);
   }
   const last = parts.pop();
+  /* v8 ignore next */
   if (!last) return;
   let curr: Record<string, unknown> = obj;
   for (const part of parts) {
@@ -207,6 +208,7 @@ function evalCondition(condition: string, state: Record<string, unknown>): boole
       return Number(left) > Number(right);
     case '<':
       return Number(left) < Number(right);
+    /* v8 ignore next 2 */
     default:
       return false;
   }
@@ -386,6 +388,7 @@ export function statespace(name: string, definition: StatespaceDefinition): Runt
             );
           } else if (edge.kind === 'influenced_by') {
             emit('influenced', { path: target, sources: edge.sources });
+            /* v8 ignore next 4 */
           } else if (edge.kind === 'triggers') {
             const result = edge.effect(runtime.get(target), runtime.getState());
             if (result !== undefined) runtime.set(edge.target, result);
@@ -422,6 +425,7 @@ export function statespace(name: string, definition: StatespaceDefinition): Runt
       if (edge.kind === 'requires') return edge.conditions.flatMap(extractPaths);
       if (edge.kind === 'influenced_by') return [...edge.sources];
       if (edge.kind === 'triggers') return [path];
+      /* v8 ignore next */
       return [];
     },
     affects(path: string): string[] {

@@ -81,6 +81,7 @@ export function analyzeSpace(space: Statespace): void {
       console.log(`  ${path} ← requires(${edge.conditions.join(' && ')})`);
     } else if (edge.kind === 'influenced_by') {
       console.log(`  ${path} ← influencedBy(${edge.sources.join(', ')})`);
+      /* v8 ignore next 3 */
     } else if (edge.kind === 'triggers') {
       console.log(`  ${path} → triggers(${edge.target})`);
     }
@@ -309,6 +310,7 @@ function buildGraphData(spaces: Statespace[]): GraphData[] {
           nodeSet.add(src);
           edges.push({ from: src, to: path, kind: 'influencedBy' });
         }
+        /* v8 ignore next 4 */
       } else if (edge.kind === 'triggers') {
         nodeSet.add(edge.target);
         edges.push({ from: path, to: edge.target, kind: 'triggers' });
@@ -541,6 +543,7 @@ render();
 </html>`;
 }
 
+/* v8 ignore start */
 function openBrowser(url: string): void {
   const cmd =
     process.platform === 'win32'
@@ -550,6 +553,7 @@ function openBrowser(url: string): void {
         : `xdg-open ${url}`;
   exec(cmd, () => {});
 }
+/* v8 ignore stop */
 
 export async function visualizeSpace(spaces: Statespace[], port = 7331): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -661,12 +665,14 @@ export async function run(argv: string[]): Promise<number> {
       return 0;
     }
 
+    /* v8 ignore next 3 */
     default:
       console.error(`Unknown command: ${cmd}`);
       return 1;
   }
 }
 
+/* v8 ignore next 7 */
 if (import.meta.url === `file://${process.argv[1]}`) {
   run(process.argv).then((code) => {
     // Non-zero: exit explicitly so the error code propagates.

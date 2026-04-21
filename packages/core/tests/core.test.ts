@@ -585,6 +585,328 @@ describe('strongConsistency constraint', () => {
   });
 });
 
+describe('dependsOn - all edge types', () => {
+  it('returns extracted paths for requires edge', () => {
+    const app = statespace('DepsReq', {
+      nodes: {
+        total: node({ initial: 0 }),
+        authenticated: node({ initial: false }),
+        canCheckout: node({ initial: false }),
+      },
+      topology: {
+        canCheckout: requires(['total > 0', 'authenticated']),
+      },
+    });
+    const deps = app.dependsOn('canCheckout');
+    expect(deps).toContain('total');
+    expect(deps).toContain('authenticated');
+  });
+
+  it('returns sources for influenced_by edge', () => {
+    const app = statespace('DepsIB', {
+      nodes: {
+        items: node({ initial: [] as string[] }),
+        recs: node({ initial: [] as string[] }),
+      },
+      topology: { recs: influencedBy(['items']) },
+    });
+    expect(app.dependsOn('recs')).toEqual(['items']);
+  });
+
+  it('returns [path] for triggers edge', () => {
+    const app = statespace('DepsTrig', {
+      nodes: {
+        order: node({ initial: null as null | { id: string } }),
+        history: node({ initial: [] as Array<{ id: string }> }),
+      },
+      topology: {
+        order: triggers('history', (v, s) => [
+          ...(s as { history: Array<{ id: string }> }).history,
+          v as { id: string },
+        ]),
+      },
+    });
+    expect(app.dependsOn('order')).toEqual(['order']);
+  });
+});
+
+describe('parseValue - quoted string literals', () => {
+  it('evaluates requires with single-quoted string literal', () => {
+    const app = statespace('QuotedSingle', {
+      nodes: {
+        role: node({ initial: 'user' }),
+        isAdmin: node({ initial: false }),
+      },
+      topology: { isAdmin: requires(["role === 'admin'"]) },
+    });
+    app.set('role', 'admin');
+    expect(app.get('isAdmin')).toBe(true);
+    app.set('role', 'user');
+    expect(app.get('isAdmin')).toBe(false);
+  });
+
+  it('evaluates requires with double-quoted string literal', () => {
+    const app = statespace('QuotedDouble', {
+      nodes: {
+        status: node({ initial: 'inactive' }),
+        isActive: node({ initial: false }),
+      },
+      topology: { isActive: requires(['status === "active"']) },
+    });
+    app.set('status', 'active');
+    expect(app.get('isActive')).toBe(true);
+  });
+});
+
+describe('cycle detection - edge cases', () => {
+  it('throws when cycle exists with no constraints', () => {
+    expect(() =>
+      statespace('CycleNoConstraint', {
+        nodes: {
+          a: node({ initial: {} }),
+          b: node({ initial: {} }),
+        },
+        topology: {
+          'a.x': derives(['b.x'], (v) => v),
+          'b.x': derives(['a.x'], (v) => v),
+        },
+      }),
+    ).toThrow(/Cycle detected/);
+  });
+
+  it('does not throw for diamond-shaped dependency graph', () => {
+    expect(() =>
+      statespace('Diamond', {
+        nodes: {
+          a: node({ initial: 0 }),
+          b: node({ initial: 0 }),
+          c: node({ initial: 0 }),
+          d: node({ initial: 0 }),
+        },
+        topology: {
+          b: derives(['a'], (v) => v),
+          c: derives(['a'], (v) => v),
+          d: derives(['b', 'c'], (bv, cv) => (bv as number) + (cv as number)),
+        },
+      }),
+    ).not.toThrow();
+  });
+});
+
+describe('triggers - effect returns undefined', () => {
+  it('does not call set when effect returns undefined', () => {
+    const app = statespace('TrigUndef', {
+      nodes: {
+        source: node({ initial: 0 }),
+        target: node({ initial: 99 }),
+      },
+      topology: {
+        source: triggers('target', () => undefined),
+      },
+    });
+    app.set('source', 1);
+    // target stays 99 because effect returned undefined
+    expect(app.get('target')).toBe(99);
+  });
+});
+
+describe('async derives - rejects with no error handler', () => {
+  it('silently ignores rejection when no error option set', async () => {
+    const app = statespace('AsyncNoErr', {
+      nodes: {
+        query: node({ initial: '' }),
+        result: node({ initial: 'idle' }),
+      },
+      topology: {
+        result: derives(['query'], async () => {
+          throw new Error('oops');
+        }),
+      },
+    });
+    app.set('query', 'test');
+    await new Promise((r) => setTimeout(r, 20));
+    // result stays 'idle' — no crash, no update
+    expect(app.get('result')).toBe('idle');
+  });
+});
+
+describe('maxFanout constraint (via CLI checkSpace)', () => {
+  it('maxFanout type is accepted in statespace constraints', () => {
+    expect(() =>
+      statespace('FanoutSpace', {
+        nodes: {
+          source: node({ initial: 0 }),
+          a: node({ initial: 0 }),
+          b: node({ initial: 0 }),
+        },
+        topology: {
+          a: derives(['source'], (v) => v),
+          b: derives(['source'], (v) => v),
+        },
+        constraints: { maxFanout: { source: 5 } },
+      }),
+    ).not.toThrow();
+  });
+});
+
+describe('loading option in async derives', () => {
+  it('option is accepted without error', async () => {
+    const app = statespace('AsyncLoading', {
+      nodes: {
+        query: node({ initial: '' }),
+        result: node({ initial: 'idle' }),
+      },
+      topology: {
+        result: derives(['query'], async (q) => `result:${q}`, {
+          loading: 'loading...',
+          error: () => 'error',
+        }),
+      },
+    });
+    app.set('query', 'hello');
+    await new Promise((r) => setTimeout(r, 10));
+    expect(app.get('result')).toBe('result:hello');
+  });
+});
+
+describe('getByPath - edge cases', () => {
+  it('returns the whole state when path is empty', () => {
+    const app = statespace('EmptyPath', {
+      nodes: { x: node({ initial: 42 }) },
+      topology: {},
+    });
+    expect(app.get('')).toEqual({ x: 42 });
+  });
+
+  it('returns undefined when an intermediate segment is null', () => {
+    const app = statespace('NullMid', {
+      nodes: { data: node({ initial: null as null | { name: string } }) },
+      topology: {},
+    });
+    expect(app.get('data.name')).toBeUndefined();
+  });
+
+  it('returns undefined for constructor key (prototype-pollution guard)', () => {
+    const app = statespace('CtorGuard', {
+      nodes: { obj: node({ initial: { a: 1 } }) },
+      topology: {},
+    });
+    expect(app.get('obj.constructor')).toBeUndefined();
+  });
+});
+
+describe('setByPath - edge cases', () => {
+  it('throws on prototype path segment', () => {
+    const app = statespace('ProtoSeg', {
+      nodes: { data: node({ initial: {} }) },
+      topology: {},
+    });
+    expect(() => app.set('data.prototype.x', true)).toThrow(/Unsafe path segment/);
+  });
+
+  it('throws on constructor path segment', () => {
+    const app = statespace('CtorSeg', {
+      nodes: { data: node({ initial: {} }) },
+      topology: {},
+    });
+    expect(() => app.set('data.constructor.x', true)).toThrow(/Unsafe path segment/);
+  });
+
+  it('creates nested path when intermediate value is a primitive', () => {
+    const app = statespace('OverwritePrim', {
+      nodes: { data: node({ initial: { count: 5 } as Record<string, unknown> }) },
+      topology: {},
+    });
+    app.set('data.count.value', 99);
+    expect((app.get('data') as Record<string, unknown>)['count']).toBeDefined();
+  });
+});
+
+describe('parseValue - boolean literals', () => {
+  it('evaluates requires with literal true', () => {
+    const app = statespace('LitTrue', {
+      nodes: { flag: node({ initial: false }), result: node({ initial: false }) },
+      topology: { result: requires(['flag === true']) },
+    });
+    app.set('flag', true);
+    expect(app.get('result')).toBe(true);
+  });
+
+  it('evaluates requires with literal false', () => {
+    const app = statespace('LitFalse', {
+      nodes: { flag: node({ initial: true }), result: node({ initial: false }) },
+      topology: { result: requires(['flag === false']) },
+    });
+    app.set('flag', false);
+    expect(app.get('result')).toBe(true);
+  });
+});
+
+describe('sourceEdges deduplication', () => {
+  it('does not double-process a target reachable via overlapping source paths', () => {
+    const computeSpy = vi.fn((u: unknown) => String(u));
+    const app = statespace('SeenDedup', {
+      nodes: {
+        user: node({ initial: { name: 'alice' } }),
+        display: node({ initial: '' }),
+      },
+      topology: {
+        // Both 'user' and 'user.name' appear as dependencies.
+        // When 'user' is set, pathAffects matches both, but 'display'
+        // should only be computed once thanks to the seen-set dedup.
+        display: derives(['user', 'user.name'], computeSpy),
+      },
+    });
+    computeSpy.mockClear();
+    app.set('user', { name: 'bob' });
+    expect(computeSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('updateOrder - diamond graph revisit', () => {
+  it('returns correct order and does not revisit nodes in diamond topology', () => {
+    const app = statespace('DiamondOrder', {
+      nodes: {
+        a: node({ initial: 0 }),
+        b: node({ initial: 0 }),
+        c: node({ initial: 0 }),
+        d: node({ initial: 0 }),
+      },
+      topology: {
+        b: derives(['a'], (v) => v),
+        c: derives(['a'], (v) => v),
+        d: derives(['b', 'c'], (bv, cv) => (bv as number) + (cv as number)),
+      },
+    });
+    const order = app.updateOrder('a');
+    expect(order).toContain('a');
+    expect(order).toContain('b');
+    expect(order).toContain('c');
+    expect(order).toContain('d');
+    // d should appear only once despite two paths to it
+    expect(order.filter((n) => n === 'd')).toHaveLength(1);
+  });
+});
+
+describe('subscribeEvent - second subscription for same type', () => {
+  it('accepts multiple subscribers for the same event type', () => {
+    const app = statespace('MultiSub', {
+      nodes: {
+        a: node({ initial: [] as string[] }),
+        b: node({ initial: [] as string[] }),
+      },
+      topology: { b: influencedBy(['a']) },
+    });
+    const h1 = vi.fn();
+    const h2 = vi.fn();
+    app.subscribeEvent('influenced', h1);
+    app.subscribeEvent('influenced', h2);
+    app.set('a', ['x']);
+    expect(h1).toHaveBeenCalledTimes(1);
+    expect(h2).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('influencedBy with options', () => {
   it('accepts debounce option without throwing', () => {
     expect(() =>

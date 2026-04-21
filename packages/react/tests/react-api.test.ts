@@ -122,6 +122,31 @@ describe('useTopology', () => {
   });
 });
 
+describe('useMutation - edge cases', () => {
+  it('append creates array from non-array initial value', () => {
+    const space = makeCountSpace();
+    const { result } = renderHook(() => useMutation(space, 'count'));
+    act(() => {
+      result.current.append(99);
+    });
+    expect(space.get('count')).toEqual([99]);
+  });
+});
+
+describe('useNodes - edge cases', () => {
+  it('returns new reference when paths array length changes', () => {
+    const space = makeCountSpace();
+    const { result, rerender } = renderHook(
+      ({ paths }: { paths: string[] }) => useNodes<unknown[]>(space, paths),
+      { initialProps: { paths: ['count', 'items'] } },
+    );
+    const firstRef = result.current;
+    rerender({ paths: ['count'] });
+    expect(result.current).not.toBe(firstRef);
+    expect(result.current).toHaveLength(1);
+  });
+});
+
 describe('useTopologyEvent', () => {
   it('calls the handler when the event fires', () => {
     const space = statespace('event-test', {
