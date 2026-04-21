@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const corePkg = JSON.parse(
-  readFileSync(resolve(__dirname, '../../packages/core/package.json'), 'utf-8')
+  readFileSync(resolve(__dirname, '../../packages/core/package.json'), 'utf-8'),
 ) as { version: string };
 
 export default defineConfig({
