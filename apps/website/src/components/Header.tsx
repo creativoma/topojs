@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { version } from '../lib/version';
 
 function GitHubIcon() {
   return (
@@ -37,7 +38,7 @@ export default function Header() {
               background: 'rgba(77,155,255,0.08)',
             }}
           >
-            v0.1.0
+            {version}
           </span>
         </div>
 

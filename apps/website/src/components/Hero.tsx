@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { version } from '../lib/version';
 import {
   ReactFlow,
   Background,
@@ -217,7 +218,7 @@ export default function Hero() {
                 animation: 'node-pulse 2s ease-in-out infinite',
               }}
             />
-            TypeScript · Framework-agnostic · v0.1.0
+            TypeScript · Framework-agnostic · {version}
           </div>
 
           <h1
