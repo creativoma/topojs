@@ -15,7 +15,7 @@ export default function Footer() {
           className="text-xl font-semibold tracking-tight"
           style={{ fontFamily: 'Fira Code, monospace', color: '#fff' }}
         >
-          topo
+          topojs
         </span>
 
         {/* Package list */}
@@ -62,16 +62,16 @@ export default function Footer() {
           </span>
           <span style={{ color: '#27272A' }}>·</span>
           <a
-            href="https://github.com/creativoma/topo"
+            href="https://github.com/creativoma/topojs"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 transition-colors"
             style={{ color: '#3F3F46' }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#A78BFA')}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#4d9bff')}
             onMouseLeave={(e) => (e.currentTarget.style.color = '#3F3F46')}
           >
             <GitHubIcon />
-            creativoma/topo
+            creativoma/topojs
           </a>
         </div>
 

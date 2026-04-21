@@ -72,7 +72,7 @@ function CodeAfter() {
         }}
       >
         <Check size={12} />
-        <span style={{ color: '#6B7280' }}>Topo — explicit topology</span>
+        <span style={{ color: '#6B7280' }}>TopoJS — explicit topology</span>
       </div>
       <pre>
         <code>
@@ -116,7 +116,7 @@ function CodeAfter() {
           {'    ),\n'}
           {'  },\n'}
           {'  '}
-          <span className="tok-cm">{'// Topo propagates it. Always. Optimally.'}</span>
+          <span className="tok-cm">{'// TopoJS propagates it. Always. Optimally.'}</span>
           {'\n'}
           {'})\n'}
         </code>
@@ -165,8 +165,8 @@ export default function Problem() {
         >
           <Lightbulb size={18} style={{ color: '#4d9bff', flexShrink: 0 }} />
           <p className="text-sm" style={{ color: '#A1A1AA' }}>
-            <strong style={{ color: '#E4E4E7' }}>With Topo</strong>, every dependency is declared in
-            the topology. The runtime computes the correct update order automatically — no more{' '}
+            <strong style={{ color: '#E4E4E7' }}>With TopoJS</strong>, every dependency is declared
+            in the topology. The runtime computes the correct update order automatically — no more{' '}
             <code
               className="text-xs px-1.5 py-0.5 rounded"
               style={{

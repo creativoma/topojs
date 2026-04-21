@@ -230,7 +230,7 @@ export default function Hero() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-lg" style={{ color: '#A1A1AA' }}>
-            Topo models application state as what it actually is — a directed graph with{' '}
+            TopoJS models application state as what it actually is — a directed graph with{' '}
             <strong style={{ color: '#E4E4E7', fontWeight: 500 }}>explicit dependencies</strong>,
             cycle detection, and optimal update propagation.
           </p>
@@ -273,14 +273,14 @@ export default function Hero() {
               Get Started →
             </a>
             <a
-              href="https://github.com/creativoma/topo"
+              href="https://github.com/creativoma/topojs"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 font-medium px-6 py-3 rounded-lg transition-all text-sm"
               style={{ color: '#A1A1AA', border: '1px solid rgba(255,255,255,0.08)' }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.color = '#fff';
-                e.currentTarget.style.borderColor = 'rgba(139,92,246,0.4)';
+                e.currentTarget.style.borderColor = 'rgba(77,155,255,0.4)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color = '#A1A1AA';

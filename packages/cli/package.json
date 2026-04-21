@@ -1,7 +1,7 @@
 {
   "name": "@topojs/cli",
   "version": "0.3.0",
-  "description": "CLI for Topo — analyze, visualize, check, optimize, export and trace statespaces",
+  "description": "CLI for TopoJS — analyze, visualize, check, optimize, export and trace statespaces",
   "keywords": [
     "state-management",
     "graph",

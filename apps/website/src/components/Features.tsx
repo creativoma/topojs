@@ -13,13 +13,13 @@ const features: { icon: FC<LucideProps>; title: string; description: string }[] 
     icon: RefreshCcw,
     title: 'Cycle Detection',
     description:
-      'Circular dependencies are caught at startup — before they crash your app at 3am. Define guarded nodes and Topo enforces the constraint.',
+      'Circular dependencies are caught at startup — before they crash your app at 3am. Define guarded nodes and TopoJS enforces the constraint.',
   },
   {
     icon: Zap,
     title: 'Optimal Updates',
     description:
-      'Topo computes the minimal propagation set using topological sort. Only what actually changed gets recomputed. Nothing more.',
+      'TopoJS computes the minimal propagation set using topological sort. Only what actually changed gets recomputed. Nothing more.',
   },
   {
     icon: Target,

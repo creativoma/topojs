@@ -1,7 +1,7 @@
 {
   "name": "@topojs/core",
   "version": "0.2.3",
-  "description": "Core runtime for Topo — statespace, nodes, edges, cycle detection and propagation",
+  "description": "Core runtime for TopoJS — statespace, nodes, edges, cycle detection and propagation",
   "keywords": [
     "state-management",
     "graph",

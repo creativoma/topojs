@@ -42,7 +42,7 @@ pnpm example
 
 ## Architecture
 
-Topo is a pnpm monorepo that implements graph-topology state management for TypeScript/React. State is modeled as a directed graph (nodes + edges) rather than a tree, with explicit dependency declarations and automatic propagation.
+TopoJS is a pnpm monorepo that implements graph-topology state management for TypeScript/React. State is modeled as a directed graph (nodes + edges) rather than a tree, with explicit dependency declarations and automatic propagation.
 
 ### Packages
 

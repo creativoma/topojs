@@ -1,7 +1,7 @@
 {
   "name": "@topojs/vite",
   "version": "0.2.3",
-  "description": "Vite plugin for Topo — topology visualizer and cycle detection at build time",
+  "description": "Vite plugin for TopoJS — topology visualizer and cycle detection at build time",
   "keywords": [
     "state-management",
     "graph",

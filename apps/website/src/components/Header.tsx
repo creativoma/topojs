@@ -27,7 +27,7 @@ export default function Header() {
             className="text-lg font-semibold tracking-tight text-white"
             style={{ fontFamily: 'Fira Code, monospace' }}
           >
-            topo
+            topojs
           </span>
           <span
             className="text-[10px] px-2 py-0.5 rounded-full border"
@@ -54,7 +54,7 @@ export default function Header() {
             Docs
           </a>
           <a
-            href="https://github.com/creativoma/topo"
+            href="https://github.com/creativoma/topojs"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm transition-colors"
