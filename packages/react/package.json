@@ -28,7 +28,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     }
   },
   "files": [
@@ -42,11 +43,16 @@
   "peerDependencies": {
     "react": ">=18"
   },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    }
+  },
   "dependencies": {
     "@topojs/core": "workspace:*"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap",
+    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --treeshake",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "clean": "rm -rf dist"

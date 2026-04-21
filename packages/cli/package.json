@@ -28,7 +28,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "files": [
@@ -38,8 +39,9 @@
   "engines": {
     "node": ">=20"
   },
+  "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --sourcemap",
+    "build": "tsup src/index.ts --format esm --dts --sourcemap --treeshake",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "clean": "rm -rf dist"
