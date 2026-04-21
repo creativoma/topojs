@@ -128,16 +128,16 @@ This is a topology. Topo understands it.
 
 Most state libraries manage **values**. Topo manages **relationships**.
 
-| | Redux | Zustand | Jotai | Recoil | MobX | XState | **Topo** |
-|---|---|---|---|---|---|---|---|
-| **State model** | Tree | Tree | Atoms | Atoms + selectors | Object graph | FSM | **Directed graph** |
-| **Dependencies** | Implicit | Implicit | Atom links | Atom links | Computed props | Transitions | **Explicit edge types** |
-| **Cycle detection** | None | None | None | Runtime | None | Built-in (FSM) | **Creation-time DFS** |
-| **Update ordering** | Manual reducers | Manual | Atom order | Atom order | Implicit reactivity | Transition-based | **Automatic topo sort** |
-| **Async state** | Middleware/thunks | Custom hooks | Suspense/loadables | Loadables | async/await | Built-in | **First-class in `derives`** |
-| **Graph introspection** | No | No | No | No | No | States/transitions | **`dependsOn`, `affects`, `updateOrder`** |
-| **Constraint system** | No | No | No | No | No | FSM guards | **`noCyclesThrough`, consistency levels** |
-| **Dev tooling** | Time-travel debugger | DevTools ext | DevTools ext | Chrome ext | MobX DevTools | XState Viz | **CLI + interactive Vite visualizer** |
+|                         | Redux                | Zustand      | Jotai              | Recoil            | MobX                | XState             | **Topo**                                  |
+| ----------------------- | -------------------- | ------------ | ------------------ | ----------------- | ------------------- | ------------------ | ----------------------------------------- |
+| **State model**         | Tree                 | Tree         | Atoms              | Atoms + selectors | Object graph        | FSM                | **Directed graph**                        |
+| **Dependencies**        | Implicit             | Implicit     | Atom links         | Atom links        | Computed props      | Transitions        | **Explicit edge types**                   |
+| **Cycle detection**     | None                 | None         | None               | Runtime           | None                | Built-in (FSM)     | **Creation-time DFS**                     |
+| **Update ordering**     | Manual reducers      | Manual       | Atom order         | Atom order        | Implicit reactivity | Transition-based   | **Automatic topo sort**                   |
+| **Async state**         | Middleware/thunks    | Custom hooks | Suspense/loadables | Loadables         | async/await         | Built-in           | **First-class in `derives`**              |
+| **Graph introspection** | No                   | No           | No                 | No                | No                  | States/transitions | **`dependsOn`, `affects`, `updateOrder`** |
+| **Constraint system**   | No                   | No           | No                 | No                | No                  | FSM guards         | **`noCyclesThrough`, consistency levels** |
+| **Dev tooling**         | Time-travel debugger | DevTools ext | DevTools ext       | Chrome ext        | MobX DevTools       | XState Viz         | **CLI + interactive Vite visualizer**     |
 
 ### What only Topo does
 
